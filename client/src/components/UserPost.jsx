@@ -88,5 +88,5 @@ const UserPost = ({ postImg, postTitle, likes, replies }) => {
     </Link>
   );
 };
- 
+
 export default UserPost;

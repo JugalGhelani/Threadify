@@ -16,12 +16,12 @@ import { BsInstagram } from "react-icons/bs";
 import { CgMoreO } from "react-icons/cg";
 
 const UserHeader = () => {
-    const toast = useToast(); 
+  const toast = useToast();
 
   const copyURL = () => {
     const currentURL = window.location.href;
     navigator.clipboard.writeText(currentURL).then(() => {
-      toast({description: "Profile URL is copied to clipboard"});
+      toast({ description: "Profile URL is copied to clipboard" });
     });
   };
 
