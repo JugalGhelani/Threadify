@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/generateToken.js";
+import { v2 as cloudinary } from "cloudinary";
 
 // Get User Profile
 const getUserProfile = async (req, res) => {
@@ -51,6 +52,8 @@ const signupUser = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
+        bio: newUser.bio,
+        profilePic: newUser.profilePic,
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
@@ -68,7 +71,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     const isPasswordCorrect = await bcrypt.compare(password, user?.password);
 
-    if (!email || !isPasswordCorrect) {
+    if (!user || !isPasswordCorrect) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
@@ -79,6 +82,8 @@ const loginUser = async (req, res) => {
       name: user.name,
       email: user.email,
       username: user.username,
+      bio: user.bio,
+      profilePic: user.profilePic,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -132,13 +137,17 @@ const followUnfollowUser = async (req, res) => {
 
 // Update User
 const updateUser = async (req, res) => {
-  const { name, email, username, password, profilePic, bio } = req.body;
+  const { name, email, username, password, bio } = req.body;
+  let { profilePic } = req.body;
   const userId = req.user._id;
   try {
     let user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
+    console.log("URL ID:", req.params.id);
+console.log("TOKEN USER ID:", req.user._id.toString());
+console.log("BODY:", req.body);
     if (req.params.id !== userId.toString()) {
       return res
         .status(400)
@@ -151,6 +160,72 @@ const updateUser = async (req, res) => {
       user.password = hashedPassword;
     }
 
+    // if (profilePic && profilePic !== user.profilePic) {
+    //   // if (user.profilePic) {
+    //   //   await cloudinary.uploader.destroy(
+    //   //     user.profilePic.split("/").pop().split(".")[0],
+    //   //   );
+    //   // }
+    //   console.log("PROFILE PIC TYPE:", typeof profilePic);
+    //   console.log("PROFILE PIC PREVIEW:", profilePic?.substring?.(0, 100));
+    //   const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+    //   profilePic = uploadedResponse.secure_url;
+    // }
+
+    // if (profilePic && profilePic !== user.profilePic) {
+    //   try {
+    //     const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+
+    //     console.log("UPLOAD SUCCESS");
+    //     console.log(uploadedResponse.secure_url);
+
+    //     profilePic = uploadedResponse.secure_url;
+    //   } catch (err) {
+    //     console.log("FULL CLOUDINARY ERROR:");
+    //     console.dir(err, { depth: null });
+    //     throw err;
+    //   }
+    // }
+
+    // if (profilePic && profilePic !== user.profilePic) {
+    //   console.log("UPLOADING NEW IMAGE");
+    //   console.log("IMAGE LENGTH:", profilePic.length);
+    //   const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
+    //     folder: "threadify_profiles",
+    //   });
+
+    //   profilePic = uploadedResponse.secure_url;
+    // }
+
+    if (profilePic && profilePic !== user.profilePic) {
+      try {
+        console.log("UPLOADING NEW IMAGE");
+        console.log("IMAGE LENGTH:", profilePic.length);
+
+        const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
+          folder: "threadify_profiles",
+        });
+
+        console.log("UPLOAD SUCCESS");
+        console.log(uploadedResponse);
+
+        profilePic = uploadedResponse.secure_url;
+      } catch (err) {
+        console.log("========= CLOUDINARY ERROR =========");
+
+        console.log("message:", err.message);
+        console.log("http_code:", err.http_code);
+
+        if (err.error) {
+          console.log("cloudinary error:", err.error);
+        }
+
+        console.log(err);
+
+        throw err;
+      }
+    }
+
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
@@ -160,8 +235,14 @@ const updateUser = async (req, res) => {
     user = await user.save();
     res.status(200).json({ message: "Profile updated succesfully", user });
   } catch (error) {
-    res.status(500).json({ error: error.message });
-    console.log("Error in Updating User: ", error.message);
+    console.error("========== UPDATE USER ERROR ==========");
+    console.error(error);
+    console.error("======================================");
+
+    return res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+    });
   }
 };
 
