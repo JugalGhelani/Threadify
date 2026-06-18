@@ -32,10 +32,10 @@ const getFeedPosts = async (req, res) => {
       createdAt: -1,
     });
 
-    res.status(200).json({ feedPosts });
+    res.status(200).json(feedPosts);
   } catch (error) {
     res.status(500).json({ error: error.message });
-    console.log("Error in Updating User: ", error.message);
+    console.log("Error in feed posts: ", error.message);
   }
 };
 
@@ -181,7 +181,7 @@ const replyToPost = async (req, res) => {
     return res.status(200).json({ message: "Reply added successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
-    console.log("Error in Updating User: ", error.message);
+    console.log("Error in reply post: ", error.message);
   }
 };
 

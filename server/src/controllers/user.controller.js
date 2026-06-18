@@ -2,15 +2,28 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import generateTokenAndSetCookie from "../utils/generateToken.js";
 import { v2 as cloudinary } from "cloudinary";
+import mongoose from "mongoose";
 
 // Get User Profile
 const getUserProfile = async (req, res) => {
   try {
-    const { username } = req.params;
+    // We will fetch user profile either with username or userId
+    // query is either username or userId
+    const { query } = req.params;
 
-    const user = await User.findOne({ username })
-      .select("-password")
-      .select("-updatedAt");
+    let user;
+
+    // query is userId
+    if (mongoose.Types.ObjectId.isValid(query)) {
+      user = await User.findOne({ _id: query })
+        .select("-password")
+        .select("-updatedAt");
+    } else {
+      // query is username
+      user = await User.findOne({ username: query })
+        .select("-password")
+        .select("-updatedAt");
+    }
 
     if (!user) {
       return res.status(404).json({
@@ -145,9 +158,10 @@ const updateUser = async (req, res) => {
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
-    console.log("URL ID:", req.params.id);
-console.log("TOKEN USER ID:", req.user._id.toString());
-console.log("BODY:", req.body);
+    // console.log("URL ID:", req.params.id);
+    // console.log("TOKEN USER ID:", req.user._id.toString());
+    // console.log("BODY:", req.body);
+
     if (req.params.id !== userId.toString()) {
       return res
         .status(400)
