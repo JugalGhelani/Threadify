@@ -94,10 +94,7 @@ const createPost = async (req, res) => {
       img: imageUrl,
     });
 
-    return res.status(201).json({
-      message: "Post created successfully",
-      post: newPost,
-    });
+    return res.status(201).json(newPost);
   } catch (error) {
     console.error("Create Post Error:", error);
 
@@ -183,7 +180,7 @@ const replyToPost = async (req, res) => {
     post.replies.push(reply);
     await post.save();
 
-    return res.status(200).json({ message: "Reply added successfully" });
+    return res.status(200).json(reply);
   } catch (error) {
     res.status(500).json({ message: error.message });
     console.log("Error in reply post: ", error.message);

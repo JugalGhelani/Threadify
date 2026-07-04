@@ -31,7 +31,16 @@ const App = () => {
         />
         <Route
           path="/:username"
-          element={user ? <UserPage /> : <Navigate to="/auth" />}
+          element={
+            user ? (
+              <>
+                <UserPage />
+                <CreatePost />
+              </>
+            ) : (
+              <UserPage />
+            )
+          }
         />
 
         <Route
@@ -39,9 +48,6 @@ const App = () => {
           element={user ? <PostPage /> : <Navigate to="/auth" />}
         />
       </Routes>
-
-      {user && <LogoutButton />}
-      {user && <CreatePost />}
     </Container>
   );
 };

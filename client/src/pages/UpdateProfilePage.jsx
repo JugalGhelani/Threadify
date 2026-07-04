@@ -53,8 +53,8 @@ export default function UpdateProfilePage() {
         return;
       }
       showToast("Success", "Profile updated successfully", "success");
-      setUser(data.user);
-      localStorage.setItem("user-threads", JSON.stringify(data.user));
+      setUser(data);
+      localStorage.setItem("user-threads", JSON.stringify(data));
     } catch (error) {
       console.error(error);
       showToast("Error", error.message || "Something went wrong", "error");
