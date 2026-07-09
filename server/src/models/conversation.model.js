@@ -1,0 +1,21 @@
+import mongoose, { Schema } from "mongoose";
+
+const conversationSchema = new Schema(
+  {
+    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    lastMessage: {
+      text: String,
+      sender: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      seen: {
+        type: Boolean,
+        default: false,
+      },
+    },
+  },
+  { timestamps: true },
+);
+
+export const Conversation = mongoose.model("Conversation", conversationSchema);
