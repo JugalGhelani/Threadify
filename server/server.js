@@ -6,10 +6,11 @@ import userRouter from "./src/routes/user.route.js";
 import postRouter from "./src/routes/post.route.js";
 import messageRouter from "./src/routes/message.route.js";
 import { v2 as cloudinary } from "cloudinary";
+import { app, server } from "./src/socket/socket.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
-const app = express();
+// const app = express();
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,10 +22,12 @@ cloudinary.config({
 // app.use(express.json()); // To parse JSON data in the req.body
 // app.use(express.urlencoded({ extended: true })); // To parse form data in the req.body true means nessted object smoothly parse in process
 app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({
-  extended: true,
-  limit: "50mb",
-}));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "50mb",
+  }),
+);
 app.use(cookieParser());
 
 app.get("/test-cloudinary", async (req, res) => {
@@ -43,7 +46,7 @@ app.use("/api/posts", postRouter);
 app.use("/api/messages", messageRouter);
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is started at ${PORT}`);
   });
 });

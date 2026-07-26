@@ -1,18 +1,19 @@
 import { Conversation } from "../models/conversation.model.js";
 import { Message } from "../models/message.model.js";
+import { getRecipientSocketId, io } from "../socket/socket.js";
 
 // Send Message
 const sendMessage = async (req, res) => {
   try {
-    const { reciepientId, message } = req.body;
+    const { recipientId, message } = req.body;
     const senderId = req.user._id;
 
     let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, reciepientId] },
+      participants: { $all: [senderId, recipientId] },
     });
     if (!conversation) {
       conversation = new Conversation({
-        participants: [senderId, reciepientId],
+        participants: [senderId, recipientId],
         lastMessage: {
           text: message,
           sender: senderId,
@@ -33,6 +34,11 @@ const sendMessage = async (req, res) => {
       }),
     ]);
 
+    const recipientSocketId = getRecipientSocketId(recipientId);
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("newMessage", newMessage);
+    }
+
     res.status(201).json(newMessage);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,7 +55,7 @@ const getMessage = async (req, res) => {
     });
 
     if (!conversation) {
-      res.status(404).json({ error: "Conversation not found" });
+      return res.status(404).json({ error: "Conversation not found" });
     }
 
     const messages = await Message.find({
@@ -66,10 +72,17 @@ const getMessage = async (req, res) => {
 const getConversation = async (req, res) => {
   const userId = req.user._id;
   try {
-    const conversation = await Conversation.find({
+    const conversations = await Conversation.find({
       participants: userId,
     }).populate({ path: "participants", select: "username profilePic" });
-    res.status(200).json(conversation)
+
+    conversations.forEach((conversation) => {
+      conversation.participants = conversation.participants.filter(
+        (participant) => participant._id.toString() !== userId.toString(),
+      );
+    });
+
+    res.status(200).json(conversations);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
