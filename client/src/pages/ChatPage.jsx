@@ -35,6 +35,26 @@ const ChatPage = () => {
   const { socket, onlineUsers } = useSocket();
 
   useEffect(() => {
+    socket?.on("messagesSeen", ({ conversationId }) => {
+      setConversations((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                ...conversation.lastMessage,
+                seen: true,
+              },
+            };
+          }
+          return conversation;
+        });
+        return updatedConversations;
+      });
+    });
+  }, [socket, setConversations]);
+
+  useEffect(() => {
     const getConversations = async () => {
       try {
         const res = await fetch("/api/messages/conversations");
@@ -43,7 +63,6 @@ const ChatPage = () => {
           showToast("Error", data.error, "error");
           return;
         }
-        console.log(data);
         setConversations(data);
       } catch (error) {
         showToast("Error", error.message, "error");
